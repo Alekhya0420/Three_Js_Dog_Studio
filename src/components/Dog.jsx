@@ -12,7 +12,7 @@ import * as THREE from "three";
 const Dog = () => {
   const model = useGLTF("/models/dog.drc.glb");
   useThree(({ camera, gl }) => {
-    camera.position.z = 0.66;
+    camera.position.z = 0.95;
     gl.toneMapping = THREE.ReinhardToneMapping;
     gl.outputColorSpace = THREE.SRGBColorSpace;
   });
