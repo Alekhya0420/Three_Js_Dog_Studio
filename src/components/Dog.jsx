@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/immutability */
 
 // GLTF/GLB Viewer needs to be installed
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import {
   OrbitControls,
@@ -10,8 +10,14 @@ import {
   useAnimations,
 } from "@react-three/drei";
 import * as THREE from "three";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 const Dog = () => {
+  gsap.registerPlugin(useGSAP);
+  gsap.registerPlugin(ScrollTrigger);
+
   const model = useGLTF("/models/dog.drc.glb");
   useThree(({ camera, gl }) => {
     camera.position.z = 0.95;
@@ -21,17 +27,23 @@ const Dog = () => {
 
   const { actions } = useAnimations(model.animations, model.scene);
 
-  useEffect(()=>{
-    actions["Take 001"].play()
-  },[actions])
+  useEffect(() => {
+    actions["Take 001"].play();
+  }, [actions]);
 
-  const [normalMap, sampleMatcap,branchMap,branchNormalMap] = useTexture([
+  const [normalMap, sampleMatcap] = useTexture([
     "/dog_normals.jpg",
     "/matcap/mat-2.png",
-    "/branches_diffuse.jpeg",
-    "/branches_normals.jpeg"
   ]).map((texture) => {
     texture.flipY = false;
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
+  });
+
+  const [branchMap, branchNormalMap] = useTexture([
+    "/branches_diffuse.jpeg",
+    "/branches_normals.jpeg",
+  ]).map((texture) => {
     texture.colorSpace = THREE.SRGBColorSpace;
     return texture;
   });
@@ -49,12 +61,45 @@ const Dog = () => {
   model.scene.traverse((child) => {
     if (child.name.includes("DOG")) {
       child.material = dogMaterial;
-    }
-    else
-    {
-      child.material =branchMaterial
+    } else {
+      child.material = branchMaterial;
     }
   });
+
+  const dogModel = useRef(model);
+
+  useGSAP(() => {
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: "#section-1",
+        endTrigger: "#section-3",
+        start: "top top",
+        end: "bottom bottom",
+        markers: true,
+        scrub: true,
+      },
+    });
+
+    tl
+    .to(dogModel.current.scene.position, {
+      z: "-=0.75",
+      y: "+=0.1",
+    })
+
+    .to(dogModel.current.scene.rotation,{
+      x:`+=${Math.PI/10}`
+    })
+
+    .to(dogModel.current.scene.rotation,{
+      y:`-=${Math.PI}`,
+    },"third")
+
+    .to(dogModel.current.scene.position,{
+      x:"-=0.6",
+      z:"+=0.9",
+      y:"-=0.01"
+    },"third")
+  }, []);
   return (
     <>
       <primitive
