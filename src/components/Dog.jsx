@@ -1,4 +1,6 @@
 /* eslint-disable react-hooks/immutability */
+
+// GLTF/GLB Viewer needs to be installed
 import React, { useEffect } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import {
